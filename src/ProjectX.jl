@@ -8,12 +8,19 @@ function __init__()
         return
     end
     toml = TOML.parsefile(project)
-    haskey(toml, "environment") || return
-    update_environment!(dirname(project), toml["environment"])
+    haskey(toml, "environment") && update_environment!(dirname(project), toml["environment"])
+    haskey(toml, "juliaenv") && update_juliaenv!(dirname(project), toml["juliaenv"])
     return
 end
 
 function update_environment!(root, d)
+    for (k, v) in d
+        @debug "Setting env. \$$(k)=`$(v)`"
+        ENV[k] = v
+    end
+end
+
+function update_juliaenv!(root, d)
     if haskey(d, "load_path")
         loadpath = map(Base.parse_load_path(d["load_path"])) do path
             startswith(path, "@") && return path
