@@ -30,6 +30,49 @@ function update_juliaenv!(root, d)
         append!(LOAD_PATH, loadpath)
         @debug "LOAD_PATH updated based in Project.toml" LOAD_PATH
     end
+    if haskey(d, "startup")
+        isa(d["startup"], String) || error("juliaenv.startup is not a string")
+        @debug "Running a project startup script:\n$(d["startup"])"
+        for (ex, str) in parseblock(d["startup"])
+            @debug "Evaluating in Main:\n$(str)"
+            Main.eval(ex)
+        end
+    end
+end
+
+# Parsing multi-expression code snippets, borrowed with modificatoins from
+# Documenter.jl (https://github.com/JuliaDocs/Documenter.jl)
+# Copyright (c) 2016: Michael Hatherly
+function parseblock(code::AbstractString; skip = 0, keywords = true, raise=true)
+    # Drop `skip` leading lines from the code block. Needed for deprecated `{docs}` syntax.
+    code = string(code, '\n')
+    code = last(split(code, '\n', limit = skip + 1))
+    endofstr = lastindex(code)
+    results = []
+    cursor = 1
+    while cursor < endofstr
+        # Check for keywords first since they will throw parse errors if we `parse` them.
+        line = match(r"^(.*)\r?\n"m, SubString(code, cursor)).match
+        keyword = Symbol(strip(line))
+        (ex, ncursor) =
+            # TODO: On 0.7 Symbol("") is in Docs.keywords, remove that check when dropping 0.6
+            if keywords && (haskey(Docs.keywords, keyword) || keyword == Symbol(""))
+                (QuoteNode(keyword), cursor + lastindex(line))
+            else
+                try
+                    Meta.parse(code, cursor; raise=raise)
+                catch err
+                    @warn "ProjectX: failed to parse an expression" exception = err
+                    break
+                end
+            end
+        str = SubString(code, cursor, prevind(code, ncursor))
+        if !isempty(strip(str))
+            push!(results, (ex, str))
+        end
+        cursor = ncursor
+    end
+    results
 end
 
 end
