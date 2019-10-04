@@ -45,7 +45,7 @@ For example, to add the `lib/` subdirectory to the `LOAD_PATH`, you can set the 
 load_path = "lib/:@:@v#.#:@stdlib"
 ```
 
-ProjectX will then set `LOAD_PATH` variable to
+ProjectX will then set the `LOAD_PATH` variable to
 
 ```julia-repl
 julia> LOAD_PATH
