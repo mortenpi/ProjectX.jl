@@ -27,7 +27,7 @@ Using the `environment` table you can set environment variables in `ENV`. I.e. i
 FOO="bar"
 ```
 
-It will set the corresponding environment variables
+It will set the corresponding environment variable
 
 ```julia-repl
 julia> ENV["FOO"]
@@ -38,14 +38,14 @@ julia> ENV["FOO"]
 
 Can be set by specifying `juliaenv.load_path` in the `Project.toml`. It is interpreted as if it was passed via the `JULIA_LOAD_PATH` environment variable.
 
-For exmaple, to add the `lib/` subdirectory to the `LOAD_PATH`, you can set the `Project.toml` up as follows:
+For example, to add the `lib/` subdirectory to the `LOAD_PATH`, you can set the `Project.toml` up as follows:
 
 ```toml
 [juliaenv]
 load_path = "lib/:@:@v#.#:@stdlib"
 ```
 
-The `LOAD_PATH` variable will then become
+ProjectX will then set `LOAD_PATH` variable to
 
 ```julia-repl
 julia> LOAD_PATH
@@ -58,7 +58,7 @@ julia> LOAD_PATH
 
 ### Startup script
 
-A `juliaenv.startup` string will be interpreted as a startup script, similar to `startup.jl`, e.g.:
+A `juliaenv.startup` string will be interpreted as a startup script, similar to a `startup.jl` file, e.g.:
 
 ```toml
 [juliaenv]
