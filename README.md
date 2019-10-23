@@ -34,6 +34,21 @@ julia> ENV["FOO"]
 "bar"
 ```
 
+#### Dynamic environment variables
+
+When setting a variable to just a string, ProjectX set the corresponding environment variables literally to that string. However, sometimes it may be necessary to generate the environment variables more dynamically.
+
+ProjectX allows methods to be applied to environment variables. For that, instead of specifying it as a string, it should be declared as a [TOML table](https://github.com/toml-lang/toml#table) or [inline table](https://github.com/toml-lang/toml#inline-table). The `method` key in that table, which should be a simple string, defined which type of transformation gets applied. Specific methods may require additional key-value pairs to be defined in the table.
+
+The currently supported methods are:
+
+* **`abspath`**: takes the `path` value as a relative path relative to the directory containing the `Project.toml` file and sets the environment variable to the corresponding _absolute_ path. For example: 
+
+  ```toml
+  [environment]
+  MY_ABSOLUTE_PATH = { method="abspath", path="relative/path/" }
+  ```
+
 ### `LOAD_PATH`
 
 Can be set by specifying `juliaenv.load_path` in the `Project.toml`. It is interpreted as if it was passed via the `JULIA_LOAD_PATH` environment variable.

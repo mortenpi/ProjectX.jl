@@ -15,8 +15,29 @@ end
 
 function update_environment!(root, d)
     for (k, v) in d
-        @debug "Setting env. \$$(k)=`$(v)`"
-        ENV[k] = v
+        if v isa String
+            @debug "Setting env. \$$(k)=`$(v)`"
+            ENV[k] = v
+        elseif v isa Dict{String,T} where T
+            if !haskey(v, "method")
+                @error "env. \$$k missing `method`. Skipping" v
+                continue
+            end
+            if v["method"] == "abspath"
+                if !haskey(v, "path")
+                    @error "env. \$$k (method `abspath`) missing `path`. Skipping" v
+                    continue
+                end
+                ENV[k] = normpath(joinpath(root, v["path"]))
+                @debug "Setting \$$(k)=`$(ENV[k])`"
+            else
+                @error "Unrecognized method for env. \$$k: $(v["method"]) Skipping" v
+                continue
+            end
+        else
+            @error "Invalid value type for env. \$$k: $(typeof(v)). Skipping." v
+            continue
+        end
     end
 end
 
