@@ -1,7 +1,89 @@
 module ProjectX
 using Pkg: TOML
 
-function __init__()
+function generate_docstring_path(mod)
+    """
+        $(mod).path(args...)
+
+    Returns an absolute path that is relative to the project root directory.
+    """
+end
+
+function generate_docstring_dir(mod)
+    """
+        $(mod).dir(args...; create=false)
+
+    Returns an absolute path to a directory relative to the project root directory.
+    If `create = true`, it will try to create the directory (if it already does not exist). If
+    `false` (default), it will throw an error if the directory does not exist.
+    """
+end
+
+export @projectx
+
+"""
+    @projectx
+
+Should be used as follows:
+
+```julia
+module MyProjectModule
+using ProjectX; @projectx
+# other project module code
+end
+```
+
+It generates two functions into your module: `path` and `dir`.
+
+---
+$(generate_docstring_path("MyProjectModule"))
+---
+$(generate_docstring_dir("MyProjectModule"))
+---
+
+It also generates an `__init__` function. To have your own initialization code,
+use a `begin ... end` block as an argument to the macro (TODO).
+"""
+macro projectx(args...)
+    # TODO: we need some error handling here...
+    user_init_body = if isempty(args)
+        :()
+    else
+        args[1]
+    end
+
+    quote
+        # This is a module
+        # Note that macro hygiene takes care of the name -- it will be mangled
+        # and will not conflict with the ProjectX package module.
+        #Base.eval(@__MODULE__, initmodule())
+
+        @doc $(generate_docstring_path(__module__))
+        $(esc(:path))(args...) = joinpath(dirname(@__DIR__), args...)
+
+        @doc $(generate_docstring_path(__module__))
+        function $(esc(:dir))(args...; create::Bool = false)
+            path = HighZ.path(args...)
+            if create && !isdir(path)
+                mkpath(path)
+            elseif !create && !isdir(path)
+                error("Required project directory missing ($path)")
+            end
+            return path
+        end
+
+        function $(esc(:__init__))()
+            init_hook(@__MODULE__)
+            $(esc(user_init_body))
+        end
+    end
+end
+
+function init_hook(mod)
+    nothing
+end
+
+function deprecated__init__()
     project = Base.active_project()
     if !isfile(project)
         @warn "$(project) not a file"
