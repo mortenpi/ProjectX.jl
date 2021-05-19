@@ -59,7 +59,7 @@ macro projectx(args...)
         @doc $(generate_docstring_path(__module__))
         $(esc(:path))(args...) = joinpath($(project_root), args...)
 
-        @doc $(generate_docstring_path(__module__))
+        @doc $(generate_docstring_dir(__module__))
         function $(esc(:dir))(args...; create::Bool = false)
             p = $(esc(:path))(args...)
             if create && !isdir(p)
