@@ -45,6 +45,9 @@ It also generates an `__init__` function. To have your own initialization code,
 use a `begin ... end` block as an argument to the macro (TODO).
 """
 macro projectx(args...)
+    project_root = dirname(dirname(string(__source__.file)))
+    @debug "Determining project root to be: $(project_root)"
+
     # TODO: we need some error handling here...
     user_init_body = if isempty(args)
         :()
@@ -53,23 +56,18 @@ macro projectx(args...)
     end
 
     quote
-        # This is a module
-        # Note that macro hygiene takes care of the name -- it will be mangled
-        # and will not conflict with the ProjectX package module.
-        #Base.eval(@__MODULE__, initmodule())
-
         @doc $(generate_docstring_path(__module__))
-        $(esc(:path))(args...) = joinpath(dirname(@__DIR__), args...)
+        $(esc(:path))(args...) = joinpath($(project_root), args...)
 
         @doc $(generate_docstring_path(__module__))
         function $(esc(:dir))(args...; create::Bool = false)
-            path = HighZ.path(args...)
-            if create && !isdir(path)
-                mkpath(path)
-            elseif !create && !isdir(path)
-                error("Required project directory missing ($path)")
+            p = $(esc(:path))(args...)
+            if create && !isdir(p)
+                mkpath(p)
+            elseif !create && !isdir(p)
+                error("Required project directory missing ($p)")
             end
-            return path
+            return p
         end
 
         function $(esc(:__init__))()
@@ -80,6 +78,8 @@ macro projectx(args...)
 end
 
 function init_hook(mod)
+    # placeholder for future implementation
+    @debug "Calling ProjectX.init_hook for $mod"
     nothing
 end
 
